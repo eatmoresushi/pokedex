@@ -1,6 +1,7 @@
 import requests
 import pandas as pd
 
+
 def str_break(word):
     '''Break strings at upper case'''
     list = [x for x in word]
@@ -9,6 +10,7 @@ def str_break(word):
             list[char_ind] = '' + list[char_ind]
     fin_list = ''.join(list).split()
     return fin_list
+
 
 def str_bracket(word):
     if "Mr. " in word:
@@ -27,15 +29,17 @@ def str_bracket(word):
         else:
             return word
 
+
 def main():
     url = 'https://pokemondb.net/pokedex/all'
     page = requests.get(url)
     # https://stackoverflow.com/a/61448317
     df = pd.read_html(page.text)[0]
-    df['Type']=df['Type'].apply(str_break)
-    df['Name']=df['Name'].apply(str_bracket)
+    df['Type'] = df['Type'].apply(str_break)
+    df['Name'] = df['Name'].apply(str_bracket)
     print(df.head())
     df.to_json('PokemonData.json')
+
 
 if __name__ == "__main__":
     main()

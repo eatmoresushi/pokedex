@@ -2,10 +2,11 @@ import pandas as pd
 import sys
 from urllib.request import urlopen, Request
 from PySide6 import QtCore, QtWidgets, QtGui
-from requests.models import HTTPError
+
 
 def int_to_str(number):
     return str(number).zfill(3)
+
 
 class PokeDex(QtWidgets.QWidget):
     def __init__(self):
@@ -16,7 +17,6 @@ class PokeDex(QtWidgets.QWidget):
         """
         initial UI
         """
-
         # Grid Layout
         self.grid = QtWidgets.QGridLayout()
         self.setLayout(self.grid)
@@ -34,24 +34,36 @@ class PokeDex(QtWidgets.QWidget):
         self.index = self.df['Index'].values
         self.dropdown.addItems(self.index)
         self.dropdown.currentIndexChanged.connect(self.show_stats)
-        self.grid.addWidget(self.dropdown, 0,0,1,1)
+        self.grid.addWidget(self.dropdown, 0, 0, 1, 1)
 
-        #Image
+        # Search bar
+        self.completer = QtWidgets.QCompleter(self.index)
+        self.completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+        self.completer.setFilterMode(QtCore.Qt.MatchContains)
+        self.searchbar = QtWidgets.QLineEdit(self)
+        self.searchbar.setCompleter(self.completer)
+        self.grid.addWidget(self.searchbar, 0, 1, 1, 1)
+        self.searchbtn = QtWidgets.QPushButton('Search', self)
+        self.grid.addWidget(self.searchbtn, 0, 2, 1, 1)
+        self.searchbtn.clicked.connect(self.show_stats)
+
+        # Image
         self.img_label = QtWidgets.QLabel()
         img_url = 'https://img.pokemondb.net/artwork/bulbasaur.jpg'
-        req = Request(img_url, headers={'User-Agent' : "Mozilla/5.0"})
+        req = Request(img_url, headers={'User-Agent': "Mozilla/5.0"})
         data = urlopen(req).read()
         image = QtGui.QImage()
         image.loadFromData(data)
         self.img_label.setPixmap(QtGui.QPixmap(image))
-        self.grid.addWidget(self.img_label, 1,1,1,1)
+        self.grid.addWidget(self.img_label, 1, 1, 1, 2)
 
         # Data
         self.label = QtWidgets.QLabel()
         self.label.setAlignment(QtCore.Qt.AlignCenter)
-        self.label.setText('\nName:\n\nType:\n\nHP:\n\nAttack\n\nSp. Attack\n\nDefense:\n\nSp. Defense:\n\nSpeed:\n\nTotal:')
+        self.label.setText(
+            '\nName:\n\nType:\n\nHP:\n\nAttack\n\nSp. Attack\n\nDefense:\n\nSp. Defense:\n\nSpeed:\n\nTotal:')
         self.label.setAlignment(QtCore.Qt.AlignLeft)
-        self.grid.addWidget(self.label, 1,0,1,1)
+        self.grid.addWidget(self.label, 1, 0, 1, 1)
 
         # Set values
         name = 'Name:\t\t\t' + 'Bulbasaur' + '\n\n'
@@ -65,18 +77,27 @@ class PokeDex(QtWidgets.QWidget):
         total = 'Total:\t\t\t' + '318' + '\n\n'
 
         # Add text
-        final = name + ty + hp + atk +satk + deff + sdef + speed + total
+        final = name + ty + hp + atk + satk + deff + sdef + speed + total
         self.label.setText(final)
         self.label.setAlignment(QtCore.Qt.AlignLeft)
         self.grid.addWidget(self.label, 1, 0, 1, 1)
 
     def show_stats(self):
-        index = self.dropdown.currentIndex()
-        val = self.names[index]
+        sending_source = self.sender()
+        val = ''
+        # QComboBox has the attribute 'currentText' while QPushButton does not
+        try:
+            assert str(sending_source.currentText())
+            index = self.dropdown.currentIndex()
+            val = self.names[index]
+        except AttributeError as e:
+            # From QPushButton
+            searchbar_txt = self.searchbar.text()
+            val = searchbar_txt.split()[1]
         cond = self.df['Name'] == val
         # Image
         base = 'https://img.pokemondb.net/artwork/'
-        index_value = str(self.df[cond].index.values[0])
+        # index_value = str(self.df[cond].index.values[0])
         img_addition = ''
         if val == "Nidoran\u2640":
             img_addition = "nidoran-f" + '.jpg'
@@ -101,7 +122,7 @@ class PokeDex(QtWidgets.QWidget):
             elif form == "pa'u style":
                 img_addition = 'oricorio-pau.jpg'
             elif form == "galarian farfetch'd":
-                img_addition = 'farfetchd-galarian.jpg'    
+                img_addition = 'farfetchd-galarian.jpg'
             elif name == 'pumpkaboo' or name == 'pumpkaboo' or name == 'rockruff':
                 img_addition = name + '.jpg'
             elif name == 'hoopa':
@@ -133,16 +154,16 @@ class PokeDex(QtWidgets.QWidget):
                 else:
                     fin_des = form
                 if name == "castform":
-                    img_addition = 'vector/'+ name + '-' + fin_des + '.png'
+                    img_addition = 'vector/' + name + '-' + fin_des + '.png'
                 else:
                     img_addition = name + '-' + fin_des + '.jpg'
         else:
             img_addition = val.lower() + '.jpg'
         img_url = base + img_addition
         if val == "Eternatus (Eternamax)":
-            img_url = "https://static.wikia.nocookie.net/villains/images/7/76/HOME890E.png" 
-        print(img_url)
-        req = Request(img_url, headers={'User-Agent' : "Mozilla/5.0"})
+            img_url = "https://static.wikia.nocookie.net/villains/images/7/76/HOME890E.png"
+        # print(img_url)
+        req = Request(img_url, headers={'User-Agent': "Mozilla/5.0"})
         data = urlopen(req).read()
         image = QtGui.QImage()
         image.loadFromData(data)
@@ -150,18 +171,25 @@ class PokeDex(QtWidgets.QWidget):
 
         # Set values
         name = 'Name:\t\t\t' + val + '\n\n'
-        ty = 'Type:\t\t\t' + ', '.join(self.df[cond]['Type'].values[0]) + '\n\n'
+        ty = 'Type:\t\t\t' + \
+            ', '.join(self.df[cond]['Type'].values[0]) + '\n\n'
         hp = 'HP:\t\t\t' + str(self.df[cond]['HP'].values[0]) + '\n\n'
         atk = 'Attack:\t\t\t' + str(self.df[cond]['Attack'].values[0]) + '\n\n'
-        satk = 'Sp. Attack:\t\t' + str(self.df[cond]['Sp. Atk'].values[0]) + '\n\n'
-        deff = 'Defense:\t\t\t' + str(self.df[cond]['Defense'].values[0]) + '\n\n'
-        sdef = 'Sp. Defense:\t\t' + str(self.df[cond]['Sp. Def'].values[0]) + '\n\n'
+        satk = 'Sp. Attack:\t\t' + \
+            str(self.df[cond]['Sp. Atk'].values[0]) + '\n\n'
+        deff = 'Defense:\t\t\t' + \
+            str(self.df[cond]['Defense'].values[0]) + '\n\n'
+        sdef = 'Sp. Defense:\t\t' + \
+            str(self.df[cond]['Sp. Def'].values[0]) + '\n\n'
         speed = 'Speed:\t\t\t' + str(self.df[cond]['Speed'].values[0]) + '\n\n'
         total = 'Total:\t\t\t' + str(self.df[cond]['Total'].values[0]) + '\n\n'
 
         # Add text
-        final = name + ty + hp + atk +satk + deff + sdef + speed + total
+        final = name + ty + hp + atk + satk + deff + sdef + speed + total
         self.label.setText(final)
+
+        # Clean searchbar
+        self.searchbar.clear()
 
 
 def main():
