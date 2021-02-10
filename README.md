@@ -1,6 +1,6 @@
 # Pokédex
 
-A fun weekend project I did. Basically it is a Pokédex written by Python. I used Qt for Python [(PySide6)](https://wiki.qt.io/Qt_for_Python) for the GUI. All Pokédex data is scrapped from [PokémonDB](https://pokemondb.net/pokedex/all). The GUI displays a picture and its statis for each Pokémon and supports searching by dex number or name.
+A fun weekend project I did. Basically it is a Pokédex written by Python. I used Qt for Python [(PySide6)](https://wiki.qt.io/Qt_for_Python) for the GUI. All Pokédex data is scrapped from [PokémonDB](https://pokemondb.net/pokedex/all). The GUI displays a picture and its statis for each Pokémon and supports searching by dex number or name. It also has a random button to show a random Pokémon entry.
 
 `pokedex.py` is the file scrapping data and `pokedex_gui.py` is for the GUI implementation.
 
