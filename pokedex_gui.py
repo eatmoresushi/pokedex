@@ -47,6 +47,11 @@ class PokeDex(QtWidgets.QWidget):
         self.grid.addWidget(self.searchbtn, 0, 2, 1, 1)
         self.searchbtn.clicked.connect(self.show_stats)
 
+        # Random one
+        self.randombtn = QtWidgets.QPushButton('Random', self)
+        self.grid.addWidget(self.randombtn, 0, 3, 1, 1)
+        self.randombtn.clicked.connect(self.show_stats)
+
         # Image
         self.img_label = QtWidgets.QLabel()
         img_url = 'https://img.pokemondb.net/artwork/bulbasaur.jpg'
@@ -55,7 +60,7 @@ class PokeDex(QtWidgets.QWidget):
         image = QtGui.QImage()
         image.loadFromData(data)
         self.img_label.setPixmap(QtGui.QPixmap(image))
-        self.grid.addWidget(self.img_label, 1, 1, 1, 2)
+        self.grid.addWidget(self.img_label, 1, 1, 1, 3)
 
         # Data
         self.label = QtWidgets.QLabel()
@@ -86,18 +91,20 @@ class PokeDex(QtWidgets.QWidget):
         sending_source = self.sender()
         val = ''
         # QComboBox has the attribute 'currentText' while QPushButton does not
-        try:
-            assert str(sending_source.currentText())
+        # use hasattr to check if a object has a attribute
+        if hasattr(sending_source, 'currentText'):
             index = self.dropdown.currentIndex()
             val = self.names[index]
-        except AttributeError as e:
-            # From QPushButton
+        elif str(sending_source.text()) == "Search":
             searchbar_txt = self.searchbar.text()
-            val = searchbar_txt.split()[1]
+            _, val = searchbar_txt.split(' ', 1)
+        elif str(sending_source.text()) == "Random":
+            single = self.df.sample()
+            val = single['Name'].values[0]
         cond = self.df['Name'] == val
         # Image
         base = 'https://img.pokemondb.net/artwork/'
-        # index_value = str(self.df[cond].index.values[0])
+        index_value = self.df[cond].index.values[0]
         img_addition = ''
         if val == "Nidoran\u2640":
             img_addition = "nidoran-f" + '.jpg'
@@ -190,6 +197,9 @@ class PokeDex(QtWidgets.QWidget):
 
         # Clean searchbar
         self.searchbar.clear()
+
+        # Set dropdown to current
+        self.dropdown.setCurrentIndex(index_value)
 
 
 def main():
