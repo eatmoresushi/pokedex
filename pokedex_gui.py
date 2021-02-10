@@ -4,6 +4,8 @@ from urllib.request import urlopen, Request
 from PySide6 import QtCore, QtWidgets, QtGui
 from requests.models import HTTPError
 
+def int_to_str(number):
+    return str(number).zfill(3)
 
 class PokeDex(QtWidgets.QWidget):
     def __init__(self):
@@ -22,13 +24,15 @@ class PokeDex(QtWidgets.QWidget):
         # Parse JSON for dataframe
         self.df = pd.read_json('PokemonData.json')
         self.df = self.df.sort_values('#')
+        self.df['#'] = self.df['#'].apply(int_to_str)
+        self.df['Index'] = self.df['#'] + ' ' + self.df['Name']
         # self.df = self.df.set_index(['#'])
 
         # Drop Down
         self.dropdown = QtWidgets.QComboBox(self)
         self.names = self.df['Name'].values
-        # self.dex = self.df['#'].values
-        self.dropdown.addItems(self.names)
+        self.index = self.df['Index'].values
+        self.dropdown.addItems(self.index)
         self.dropdown.currentIndexChanged.connect(self.show_stats)
         self.grid.addWidget(self.dropdown, 0,0,1,1)
 
